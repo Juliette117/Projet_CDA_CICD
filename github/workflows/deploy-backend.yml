@@ -1,0 +1,25 @@
+name: Build & Deploy Backend
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+    branches:
+      - main
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Build backend image
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest ./Back/wpl-api
+
+    - name: Push image to Docker Hub
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/backend:latest

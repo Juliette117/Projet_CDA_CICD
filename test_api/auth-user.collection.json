@@ -1,0 +1,88 @@
+{
+    "info": {
+      "name": "WPL - Auth & Users",
+      "_postman_id": "auth-user-collection",
+      "description": "Collection pour tester l'authentification (Signup/Login) et CRUD User de l'application WPL.",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Signup User",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"email\": \"user1@example.com\",\n  \"username\": \"User1\",\n  \"password\": \"password123\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:3000/auth/signup",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "3000",
+            "path": ["auth", "signup"]
+          }
+        }
+      },
+      {
+        "name": "Login User",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"email\": \"user1@example.com\",\n  \"password\": \"password123\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:3000/auth/login",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "3000",
+            "path": ["auth", "login"]
+          }
+        }
+      },
+      {
+        "name": "Get All Users (Protected)",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+          ],
+          "url": {
+            "raw": "http://localhost:3000/users",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "3000",
+            "path": ["users"]
+          }
+        }
+      }
+    ],
+    "event": [
+      {
+        "listen": "prerequest",
+        "script": {
+          "exec": [],
+          "type": "text/javascript"
+        }
+      },
+      {
+        "listen": "test",
+        "script": {
+          "exec": [],
+          "type": "text/javascript"
+        }
+      }
+    ],
+    "variable": [
+      {
+        "key": "jwt_token",
+        "value": ""
+      }
+    ]
+  }
