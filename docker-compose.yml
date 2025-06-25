@@ -1,17 +1,6 @@
-# version: '3.9'
+version: "3.9"
 
 services:
-
-  # FRONTEND
-  frontend:
-    build:
-      context: ../Front
-      dockerfile: Dockerfile
-    ports:
-      - "4200:80"
-    container_name: wpl_frontend
-    restart: unless-stopped
-
   # API GATEWAY
   api-gateway:
     build:
@@ -19,6 +8,7 @@ services:
       dockerfile: apps/api-gateway/Dockerfile
     ports:
       - "3000:3000"
+    container_name: api-gateway
     depends_on:
       - auth-service
       - user-service
@@ -26,7 +16,10 @@ services:
       # - playlist-service
       # - recommandation-service
       # - notification-service
-    container_name: api-gateway
+    networks:
+      - wpl_network
+    volumes:
+      - api_gateway_data:/app
     restart: unless-stopped
 
   # AUTH SERVICE
@@ -35,6 +28,10 @@ services:
       context: ../Back
       dockerfile: apps/auth-service/Dockerfile
     container_name: auth-service
+    networks:
+      - wpl_network
+    volumes:
+      - auth_data:/app
     restart: unless-stopped
 
   # USER SERVICE
@@ -43,55 +40,112 @@ services:
       context: ../Back
       dockerfile: apps/user-service/Dockerfile
     container_name: user-service
+    depends_on:
+      - postgres
+    networks:
+      - wpl_network
+    volumes:
+      - user_data:/app
     restart: unless-stopped
 
-  # MEDIA SERVICE (utilise Neo4j)
+  # # MEDIA SERVICE
   # media-service:
   #   build:
   #     context: ../Back
-  #     dockerfile: Dockerfile.media-service
+  #     dockerfile: apps/media-service/Dockerfile
   #   container_name: media-service
+  #   environment:
+  #     NEO4J_URI: bolt://neo4j:7687
+  #     NEO4J_USER: neo4j
+  #     NEO4J_PASSWORD: wpl_pass
+  #     JWT_SECRET: wpl_secret
+  #     PORT: 3003
   #   depends_on:
   #     - neo4j
+  #   networks:
+  #     - wpl_network
+  #   volumes:
+  #     - media_data:/app
   #   restart: unless-stopped
 
   # # PLAYLIST SERVICE
   # playlist-service:
   #   build:
   #     context: ../Back
-  #     dockerfile: Dockerfile.playlist-service
+  #     dockerfile: apps/playlist-service/Dockerfile
   #   container_name: playlist-service
+  #   environment:
+  #     JWT_SECRET: wpl_secret
+  #     PORT: 3004
+  #   networks:
+  #     - wpl_network
+  #   volumes:
+  #     - playlist_data:/app
   #   restart: unless-stopped
 
   # # RECOMMANDATION SERVICE
   # recommandation-service:
   #   build:
   #     context: ../Back
-  #     dockerfile: Dockerfile.recommandation-service
+  #     dockerfile: apps/recommandation-service/Dockerfile
   #   container_name: recommandation-service
+  #   environment:
+  #     JWT_SECRET: wpl_secret
+  #     PORT: 3005
+  #   networks:
+  #     - wpl_network
+  #   volumes:
+  #     - recommandation_data:/app
   #   restart: unless-stopped
 
   # # NOTIFICATION SERVICE
   # notification-service:
   #   build:
   #     context: ../Back
-  #     dockerfile: Dockerfile.notification-service
+  #     dockerfile: apps/notification-service/Dockerfile
   #   container_name: notification-service
-  #   restart: unless-stopped
-
-  # # POSTGRESQL
-  # postgres:
-  #   image: postgres:14
-  #   container_name: wpl_postgres
   #   environment:
-  #     POSTGRES_DB: wpl_db
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #   ports:
-  #     - "5432:5432"
+  #     JWT_SECRET: wpl_secret
+  #     PORT: 3006
+  #   networks:
+  #     - wpl_network
+  #   volumes:
+  #     - notification_data:/app
   #   restart: unless-stopped
 
-  # NEO4J
+  # FRONTEND
+  frontend:
+    build:
+      context: ../Front
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    # depends_on:
+    #   - api-gateway
+    container_name: wpl_frontend
+    environment:
+      - NGINX_HOST=localhost
+    networks:
+      - wpl_network
+    restart: unless-stopped
+
+  # PostgreSQL
+  postgres:
+    image: postgres:14
+    container_name: wpl_postgres
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - wpl_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Neo4j
   neo4j:
     image: neo4j:5
     container_name: wpl_neo4j
@@ -100,9 +154,13 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
+    networks:
+      - wpl_network
+    volumes:
+      - neo4j_data:/data
     restart: unless-stopped
 
-  # ZOOKEEPER (pour Kafka)
+  # Kafka Zookeeper
   zookeeper:
     image: bitnami/zookeeper:latest
     container_name: wpl_zookeeper
@@ -110,9 +168,11 @@ services:
       - "2181:2181"
     environment:
       ALLOW_ANONYMOUS_LOGIN: yes
+    networks:
+      - wpl_network
     restart: unless-stopped
 
-  # KAFKA
+  # Kafka
   kafka:
     image: bitnami/kafka:latest
     container_name: wpl_kafka
@@ -126,9 +186,11 @@ services:
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
     depends_on:
       - zookeeper
+    networks:
+      - wpl_network
     restart: unless-stopped
 
-  # KAFKA UI
+  # Kafka UI
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka_ui
@@ -139,4 +201,21 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     depends_on:
       - kafka
+    networks:
+      - wpl_network
     restart: unless-stopped
+
+networks:
+  wpl_network:
+
+volumes:
+  frontend_data:
+  api_gateway_data:
+  auth_data:
+  user_data:
+  # media_data:
+  # playlist_data:
+  # recommandation_data:
+  # notification_data:
+  postgres_data:
+  neo4j_data:
