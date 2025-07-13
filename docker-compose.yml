@@ -1,4 +1,4 @@
-version: "3.9"
+# version: "3.9"
 
 services:
   # API GATEWAY
@@ -12,8 +12,8 @@ services:
     depends_on:
       - auth-service
       - user-service
-      # - media-service
-      # - playlist-service
+      - media-service
+      - playlist-service
       # - recommandation-service
       # - notification-service
     networks:
@@ -48,40 +48,33 @@ services:
       - user_data:/app
     restart: unless-stopped
 
-  # # MEDIA SERVICE
-  # media-service:
-  #   build:
-  #     context: ../Back
-  #     dockerfile: apps/media-service/Dockerfile
-  #   container_name: media-service
-  #   environment:
-  #     NEO4J_URI: bolt://neo4j:7687
-  #     NEO4J_USER: neo4j
-  #     NEO4J_PASSWORD: wpl_pass
-  #     JWT_SECRET: wpl_secret
-  #     PORT: 3003
-  #   depends_on:
-  #     - neo4j
-  #   networks:
-  #     - wpl_network
-  #   volumes:
-  #     - media_data:/app
-  #   restart: unless-stopped
+  # MEDIA SERVICE
+  media-service:
+    build:
+      context: ../Back
+      dockerfile: apps/media-service/Dockerfile
+    container_name: media-service
+    depends_on:
+      - neo4j
+    networks:
+      - wpl_network
+    volumes:
+      - media_data:/app
+    restart: unless-stopped
 
-  # # PLAYLIST SERVICE
-  # playlist-service:
-  #   build:
-  #     context: ../Back
-  #     dockerfile: apps/playlist-service/Dockerfile
-  #   container_name: playlist-service
-  #   environment:
-  #     JWT_SECRET: wpl_secret
-  #     PORT: 3004
-  #   networks:
-  #     - wpl_network
-  #   volumes:
-  #     - playlist_data:/app
-  #   restart: unless-stopped
+  # PLAYLIST SERVICE
+  playlist-service:
+    build:
+      context: ../Back
+      dockerfile: apps/playlist-service/Dockerfile
+    container_name: playlist-service
+    depends_on:
+      - neo4j
+    networks:
+      - wpl_network
+    volumes:
+      - playlist_data:/app
+    restart: unless-stopped
 
   # # RECOMMANDATION SERVICE
   # recommandation-service:
@@ -213,8 +206,8 @@ volumes:
   api_gateway_data:
   auth_data:
   user_data:
-  # media_data:
-  # playlist_data:
+  media_data:
+  playlist_data:
   # recommandation_data:
   # notification_data:
   postgres_data:
