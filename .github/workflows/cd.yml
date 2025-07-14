@@ -1,4 +1,4 @@
-name: Deploy to Railway
+name: Deploy
 
 on:
   push:
@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: 📦 Install Railway CLI
+      - name: Install Railway CLI
         run: npm install -g railway
 
-      - name: 🔐 Authenticate with Railway
+      - name: Authenticate with Railway
         run: railway login --apiKey ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: 🚀 Deploy to Railway
+      - name: Deploy to Railway
         run: railway up --yes
